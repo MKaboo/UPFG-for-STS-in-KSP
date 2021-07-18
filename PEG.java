@@ -27,6 +27,7 @@ import krpc.client.services.MechJeb.TimeSelector;
 import krpc.client.services.SpaceCenter;
 import krpc.client.services.SpaceCenter.Control;
 import krpc.client.services.SpaceCenter.Engine;
+import krpc.client.services.SpaceCenter.Node;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
 
@@ -85,13 +86,13 @@ public class PEG {
 		rVec = toV3D(positionStream.get());
 		vVec = toV3D(velocityStream.get());
 		rMag = FastMath.sqrt(Vector3D.dotProduct(rVec, rVec));
-		
+
 		vehiclePreformance();
-		
+
 		ReferenceFrame obtFrame = vessel.getOrbit().getBody().getNonRotatingReferenceFrame();
-		
+
 		Stream<Double> metStream = connection.addStream(vessel, "getMET");
-		
+
 		double deltaV = 0;
 		while (true)
 		{
@@ -129,10 +130,10 @@ public class PEG {
 						}
 						allowPitch = false;
 						terminalGuidance(vessel, referenceFrame, positionStream, velocityStream, deltaV);
-						
+
 						newMET = metStream.get();
 						oldMET = newMET;
-						while(FastMath.abs(newMET-oldMET) <= 10) 
+						while (FastMath.abs(newMET - oldMET) <= 10)
 						{
 							newMET = metStream.get();
 							TimeUnit.MILLISECONDS.sleep(100);
@@ -160,18 +161,18 @@ public class PEG {
 					upfgConvergedFlag = true;
 				}
 
-				//				if (debug)
-				//				{
+				// if (debug)
+				// {
 //									System.out.println("dV " + deltaV);
-									System.out.println("T: " + FastMath.round(T));
-				//				}
+				System.out.println("T: " + FastMath.round(T));
+				// }
 
 				oldMET = newMET;
 				T = Tnew;
-				
+
 				steering(fTheta, obtFrame);
 
-				//				System.out.println();
+				// System.out.println();
 
 			}
 
@@ -210,19 +211,18 @@ public class PEG {
 		{
 			steadyPitchDown = false;
 		}
-		if(obtSpeed >= 7000.) 
+		if (obtSpeed >= 7000.)
 		{
 			steadyPitchDown = false;
 			direction = true;
 		}
-		
+
 		if (upfgConvergedFlag)
 		{
 			if (!direction || steadyPitchDown)
 			{
 				targetPitch *= -1.0;
 			}
-
 
 			if (allowPitch)
 			{
@@ -234,7 +234,7 @@ public class PEG {
 			System.err.println("UPFG NOT CONVERGED");
 		}
 	}
-	
+
 	private void setAandB()
 	{
 		double rdot = rVec.dotProduct(vVec) / rMag;
@@ -263,38 +263,33 @@ public class PEG {
 		Stream<Double> metStream = connection.addStream(vessel, "getMET");
 		vesselControl.setThrottle(0);
 		vesselControl.setActionGroup(1, true);
-		
-		
-		
-		
+
 		smartASS.setSurfacePitch(0);
 		smartASS.setSurfaceRoll(180);
 		smartASS.update(false);
-		
+
 		vesselControl.setUp(-0.5f);
 		rcsHoldLoop(metStream, vessel, 6, 100);
-		
+
 		vesselControl.setUp(0);
 		stage();
 		vesselControl.setActionGroup(0, true);
 		stage();
-		
+
 		vesselControl.setUp(1f);
 		rcsHoldLoop(metStream, vessel, 15, 100);
 
-		
 		vesselControl.setUp(0f);
 		vesselControl.setThrottle(1.0f);
-		
+
 		rcsHoldLoop(metStream, vessel, 10, 100);
 		vesselControl.setThrottle(0f);
-		
-		
+
 		rcsHoldLoop(metStream, vessel, 10, 1000);
-		vesselControl.setActionGroup(2, true);
+		vesselControl.toggleActionGroup(2);
 		smartASS.setSurfaceRoll(0);
 		smartASS.update(false);
-		
+
 		rcsHoldLoop(metStream, vessel, 10, 1000);
 //		while(FastMath.abs(currentTime-oldTime) <= 10) 
 //		{
@@ -304,47 +299,98 @@ public class PEG {
 //			
 //		}
 //		oldTime = currentTime;
-		 
 
-		
-		NodeExecuterComputer nec = new NodeExecuterComputer(connection);
-		//OperationCircularize oc = new OperationCircularize(connection, 0);
-		
+//		NodeExecuterComputer nec = new NodeExecuterComputer(connection);
+		// OperationCircularize oc = new OperationCircularize(connection, 0);
+
 		ManeuverPlanner maneuverPlanner = mj.getManeuverPlanner();
-		
+
 		OperationCircularize oc = maneuverPlanner.getOperationCircularize();
 
 		TimeSelector ts = oc.getTimeSelector();
 		ts.setCircularizeAltitude(parkingApoM);
-		TimeReference reference = TimeReference.ALTITUDE; 
+		TimeReference reference = TimeReference.ALTITUDE;
 		ts.setTimeReference(reference);
-		oc.makeNodes();   
+		oc.makeNodes();
 		rcsHoldLoop(metStream, vessel, (9 * 60), 1000);
-		nec.executeNode();
+
+		// nec.executeNode();
+
+		if (exeCircNode(metStream))
+		{
+			System.out.println("Welcome to orbit!");
+		}
+
 	}
-	private void rcsHoldLoop(final Stream<Double> stream, final Vessel vessel,final double timeDif,final long sleepAmount) throws RPCException, InterruptedException, StreamException
+
+	private boolean exeCircNode(Stream<Double> stream)
+	{
+
+		try
+		{
+			Node node = vesselControl.getNodes().get(0);
+			smartASS.setAutopilotMode(SmartASSAutopilotMode.NODE);
+			smartASS.setInterfaceMode(SmartASSInterfaceMode.SURFACE);
+			smartASS.update(false);
+
+			rcsHoldLoop(stream, vessel, 5, 500);
+			vesselControl.setThrottle(1.0f);
+
+			while (node.getRemainingDeltaV() >= 5.0)
+			{
+
+				TimeUnit.MILLISECONDS.sleep(500);
+
+			}
+
+			vesselControl.setThrottle(0);
+			smartASS.setAutopilotMode(SmartASSAutopilotMode.SURFACE_PROGRADE);
+			smartASS.setInterfaceMode(SmartASSInterfaceMode.SURFACE);
+			smartASS.setSurfaceVelRoll(0);
+			smartASS.update(false);
+			rcsHoldLoop(stream, vessel, 5, 500);
+
+			smartASS.setAutopilotMode(SmartASSAutopilotMode.PROGRADE);
+			smartASS.setInterfaceMode(SmartASSInterfaceMode.ORBITAL);
+			smartASS.update(false);
+			rcsHoldLoop(stream, vessel, 5, 500);
+
+		} catch (RPCException e)
+		{
+			e.printStackTrace();
+		} catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		} catch (StreamException e)
+		{
+			e.printStackTrace();
+		}
+
+		return true;
+	}
+
+	private void rcsHoldLoop(final Stream<Double> stream, final Vessel vessel, final double timeDif, final long sleepAmount) throws RPCException, InterruptedException, StreamException
 	{
 		double currentTime = stream.get();
 		double oldTime = currentTime;
-		while(FastMath.abs(currentTime-oldTime) <= timeDif) 
+		while (FastMath.abs(currentTime - oldTime) <= timeDif)
 		{
-			
+
 			currentTime = stream.get();
 			TimeUnit.MILLISECONDS.sleep(sleepAmount);
-			
+
 		}
-		
+
 	}
-	
+
 	private void terminalGuidance(final Vessel vessel, final ReferenceFrame referenceFrame, final Stream<Triplet<Double, Double, Double>> positionStream, final Stream<Triplet<Double, Double, Double>> velocityStream, final double deltaV) throws RPCException, StreamException, InterruptedException
 	{
 		stage();
-		//double oldMET = vessel.getMET() - 1.0;
-
+		// double oldMET = vessel.getMET() - 1.0;
 
 		double terminalDeltaV = deltaV;
 		System.out.println(terminalDeltaV + " m/s to MECO");
-		
+
 		smartASS.setSurfacePitch(25.0);
 
 		smartASS.update(false);
@@ -374,7 +420,7 @@ public class PEG {
 			// maintain3G(accel);
 
 //			smartASS.setSurfacePitch(targetPitch);
-			
+
 //			if (currentMET - oldMET >= 1.0)
 //			{
 //				//			System.out.println();
@@ -468,7 +514,7 @@ public class PEG {
 
 	public static void main(String[] args) throws RPCException, IOException, InterruptedException, StreamException
 	{
-		
+
 		connection = Connection.newInstance("PEG");
 		KRPC.newInstance(connection);
 
@@ -488,8 +534,8 @@ public class PEG {
 		smartASS.setForceRoll(true);
 		smartASS.setInterfaceMode(SmartASSInterfaceMode.SURFACE);
 		smartASS.setAutopilotMode(SmartASSAutopilotMode.SURFACE);
-		//		heading = smartASS.getSurfaceHeading();
-		//		roll = smartASS.getSurfaceRoll();
+		// heading = smartASS.getSurfaceHeading();
+		// roll = smartASS.getSurfaceRoll();
 		pitch = smartASS.getSurfacePitch();
 		smartASS.update(false);
 		new PEG(vessel, referenceFrame);
