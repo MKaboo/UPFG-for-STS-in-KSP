@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.math3.util.FastMath;
 import org.javatuples.Triplet;
 
+import flightComputer.FlightUI.FlightMode;
 import krpc.client.Connection;
 import krpc.client.RPCException;
 import krpc.client.Stream;
@@ -46,7 +47,7 @@ public class ShuttleAscent2 {
 	private int SRBINDEX = Integer.MAX_VALUE;
 	private Connection connection;
 	private boolean maxQ = true;
-
+	protected FlightUI flightUI;
 	public ShuttleAscent2() throws InterruptedException, IOException, RPCException, StreamException {
 		connection = Connection.newInstance("Launch");
 		KRPC.newInstance(connection);
@@ -54,14 +55,18 @@ public class ShuttleAscent2 {
 		spaceCenter = SpaceCenter.newInstance(connection);
 		vessel = spaceCenter.getActiveVessel();
 
+		mj = MechJeb.newInstance(connection);
+		smartASS = mj.getSmartASS();
+		
+		flightUI = new FlightUI();
+		
 		TimeUnit.SECONDS.sleep(2);
 
 		body = vessel.getOrbit().getBody();
 
 		vesselControl = vessel.getControl();
-
-		mj = MechJeb.newInstance(connection);
-		smartASS = mj.getSmartASS();
+		
+		
 		smartASS.setForcePitch(true);
 		smartASS.setForceYaw(true);
 		smartASS.setForceRoll(true);
@@ -78,6 +83,8 @@ public class ShuttleAscent2 {
 				vessel.getOrbit().getBody().getReferenceFrame());
 
 
+		flightUI.start();
+		
 		initializeTWR();
 		findLaunchCorridor(300, 240, 30, false);
 		countdown();
@@ -141,11 +148,7 @@ public class ShuttleAscent2 {
 
 	private boolean findLaunchCorridor(final double targOrbitApoKM, final double targOrbitPerKM, final double orbitInclination, final boolean timedLaunch) throws RPCException
 	{
-		if (debug)
-		{
-			System.out.println(vessel.flight(vessel.getOrbitalReferenceFrame()).getLatitude());
-			System.out.println(orbitInclination);
-		}
+
 		targApoM = targOrbitApoKM * 1000;
 		inclination = orbitInclination;
 		double tempAngle = 0;
@@ -162,8 +165,7 @@ public class ShuttleAscent2 {
 
 				if (debug)
 				{
-					System.out.println(vessel.flight(vessel.getOrbitalReferenceFrame()).getLatitude());
-					System.out.println(tempAngle);
+
 				}
 
 			} else if (targetBody != null)
@@ -209,11 +211,7 @@ public class ShuttleAscent2 {
 				heading = FastMath.atan(vx / vy);
 				heading = FastMath.toDegrees(heading);
 				vesselControl.setThrottle(0.90f);
-				if (debug)
-				{
 
-					System.out.println(heading);
-				}
 			}
 		}
 
@@ -230,6 +228,7 @@ public class ShuttleAscent2 {
 		smartASS.update(true);
 		for (int i = 10; i > 0; i--)
 		{
+			flightUI.updateGUI();
 			System.out.println("T-minus " + i);
 			vesselControl.setThrottle(0.90f);
 			if (i == 7)
@@ -271,11 +270,10 @@ public class ShuttleAscent2 {
 
 			if (MET - oldMET >= 1)
 			{
-
+				flightUI.updateGUI();
 				// findFlightDirectionalAngles();
 
 				// shipStatus();
-				System.out.println("T-plus " + FastMath.round(MET));
 				smartASS.setSurfaceRoll(roll);
 
 				switch (vs) {
@@ -312,7 +310,6 @@ public class ShuttleAscent2 {
 						smartASS.setSurfaceHeading(heading);
 						vs = vesselState.pitchTo45;
 						headsDown = true;
-						System.out.println("Heads Down");
 					}
 					break;
 				}
@@ -352,16 +349,21 @@ public class ShuttleAscent2 {
 						if (provideCurrentSRBThrust() / SRBmaxThrust <= 0.03f)
 						{
 
-							System.out.println("Booster Separation");
 							stage();
 							SRB = false;
 
 						}
 					} else
 					{
-						String[] str = { Double.toString(targApoM) };
-						connection.close();
-						PEG.main(str);
+//						//TODO prepare for handover
+//						String[] str = { Double.toString(targApoM) };
+//						connection.close();
+//						PEG.main(str);
+						
+						
+						//flightUI.setFlightMode(FlightMode.upfg);
+						new PEG(targApoM, flightUI);
+						keepRunning = false;
 						break;
 					}
 
@@ -374,8 +376,9 @@ public class ShuttleAscent2 {
 				smartASS.update(true);
 
 			}
-
+			TimeUnit.MILLISECONDS.sleep(125);
 		}
+		connection.close();
 	}
 
 	private enum vesselState {
@@ -386,25 +389,34 @@ public class ShuttleAscent2 {
 	{
 		double oldMET = 0;
 
-		if(vessel.flight(refFrame).getDynamicPressure() > 2.9e4 && maxQ) 
+		Stream<Float> q = connection.addStream(vessel.flight(refFrame), "getDynamicPressure");
+		
+		
+		
+		if(q.get() > 2.9e4 && maxQ) 
 		{
+			flightUI.setFlightMode(FlightMode.maxQ);
 			maxQ = false;
 			thrustChange(0.1f);
 			maxPitchRate = 1f;
 		}
-		while (vessel.flight(refFrame).getDynamicPressure() > 2.9e4)
+		while (q.get() > 2.9e4)
 		{
 			Stream<Double> metStream = connection.addStream(vessel, "getMET");
 
 			double MET = metStream.get();
 
-			if (vesselControl.getAbort())
-			{
-				break;
-			}
 
 			if (MET - oldMET >= 0.125)
 			{
+				try
+				{
+					flightUI.updateGUI();
+				} catch (InterruptedException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				smartASS.setSurfacePitch(pitch);
 
 
@@ -415,7 +427,8 @@ public class ShuttleAscent2 {
 				oldMET = MET;
 				
 			}
-		}	
+		}
+		flightUI.setFlightMode(FlightMode.preprogramed);
 	}
 
 	private void thrustChange(float throttle) throws RPCException
