@@ -1,4 +1,4 @@
-package flightComputer;
+package shuttleGuidance;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,7 +11,6 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.FastMath;
 import org.javatuples.Triplet;
 
-import flightComputer.FlightUI.FlightMode;
 import krpc.client.Connection;
 import krpc.client.RPCException;
 import krpc.client.Stream;
@@ -31,6 +30,7 @@ import krpc.client.services.SpaceCenter.Engine;
 import krpc.client.services.SpaceCenter.Node;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
+import shuttleGuidance.FlightUI.FlightMode;
 
 public class PEG {
 
@@ -434,7 +434,6 @@ public class PEG {
 		ManeuverPlanner maneuverPlanner = mj.getManeuverPlanner();
 
 		OperationCircularize oc = maneuverPlanner.getOperationCircularize();
-
 		TimeSelector ts = oc.getTimeSelector();
 		ts.setCircularizeAltitude(parkingApoM);
 		TimeReference reference = TimeReference.ALTITUDE;
@@ -443,6 +442,7 @@ public class PEG {
 		//rcsHoldLoop(metStream, vessel, (5 * 60), 1000);
 
 		// nec.executeNode();
+		flightUI.setFlightMode(FlightMode.coast);
 
 		if (exeCircNode(metStream))
 		{
@@ -456,6 +456,7 @@ public class PEG {
 
 		try
 		{
+			flightUI.setFlightMode(FlightMode.circularization);
 			ArrayList<Engine> omsEngines = new ArrayList<>();
 			for (Engine engine : vessel.getParts().getEngines())
 			{
@@ -568,6 +569,7 @@ public class PEG {
 
 	private void terminalGuidance(final Vessel vessel, final ReferenceFrame referenceFrame, final Stream<Triplet<Double, Double, Double>> positionStream, final Stream<Triplet<Double, Double, Double>> velocityStream, final double deltaV) throws RPCException, StreamException, InterruptedException
 	{
+		flightUI.setFlightMode(FlightMode.terminalMains);
 		stage();
 
 		smartASS.setSurfacePitch(25.0);
@@ -581,7 +583,7 @@ public class PEG {
 		smartASS.setSurfacePitch(0);
 		smartASS.update(false);
 		vesselControl.setThrottle(0);
-
+		flightUI.setFlightMode(FlightMode.evasion);
 	}
 
 	private double[] calcDeltaVandT() throws RPCException

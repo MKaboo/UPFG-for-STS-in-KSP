@@ -1,6 +1,9 @@
-package flightComputer;
+package shuttleGuidance;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Panel;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -53,7 +56,6 @@ public class FlightUI {
 	private ReferenceFrame srfFrame;
 	private Stream<Float> atmDen;
 	private Stream<Float> qStream;
-
 	private Stream<Float> hSpeedStream;
 	private Stream<Float> vSpeedStream;
 	private Stream<Float> orbSpeedStream;
@@ -62,10 +64,9 @@ public class FlightUI {
 	private JLabel orbSpeedLabel;
 	private Stream<Float> altStream;
 	private Connection connection;
+
 	public FlightUI() {
 
-//		this.spaceCenter = spaceCenter;
-//		this.vessel = vessel;
 		try
 		{
 			connection = Connection.newInstance("GUI");
@@ -84,7 +85,7 @@ public class FlightUI {
 			hSpeedStream = connection.addStream(flight, "getHorizontalSpeed");
 			vSpeedStream = connection.addStream(flight, "getVerticalSpeed");
 			altStream = connection.addStream(flight, "getMeanAltitude");
-			
+
 			orbSpeedStream = connection.addStream(vessel.getOrbit(), "getSpeed");
 
 		} catch (StreamException | RPCException | IOException e)
@@ -103,62 +104,114 @@ public class FlightUI {
 
 	private void initGUI()
 	{
-		JFrame f = new JFrame("Flight Information");// creating instance of JFrame
-		f.setSize(1920, 1080);// 400 width and 500 height
+		Font smallFont = new Font("Monospaced", Font.PLAIN, 25);
+		Color bgColor = new Color(51, 255, 51);
+
+		JFrame f = new JFrame("Flight Information");
+		f.setSize(1920, 1080);
+		Panel panel = new Panel(new GridLayout(9, 9));
+
 		utLabel = new JLabel("N/A");
+		utLabel.setForeground(bgColor);
+		utLabel.setFont(smallFont);
 
 		metLabel = new JLabel("N/A");
+		metLabel.setForeground(bgColor);
+		metLabel.setFont(smallFont);
 
 		headingLabel = new JLabel("N/A");
+		headingLabel.setForeground(bgColor);
+		headingLabel.setFont(smallFont);
 
 		pitchLabel = new JLabel("N/A");
+		pitchLabel.setForeground(bgColor);
+		pitchLabel.setFont(smallFont);
 
 		rollLabel = new JLabel("N/A");
+		rollLabel.setForeground(bgColor);
+		rollLabel.setFont(smallFont);
 
 		vesselStatusLabel = new JLabel("N/A");
+		vesselStatusLabel.setForeground(bgColor);
+		vesselStatusLabel.setFont(smallFont);
 
 		throttleLabel = new JLabel("N/A");
+		throttleLabel.setForeground(bgColor);
+		throttleLabel.setFont(smallFont);
+
 		thrustLabel = new JLabel("N/A");
+		thrustLabel.setForeground(bgColor);
+		thrustLabel.setFont(smallFont);
+
 		accelLabel = new JLabel("N/A");
+		accelLabel.setForeground(bgColor);
+		accelLabel.setFont(smallFont);
+
 		dymPressureLabel = new JLabel("N/A");
+		dymPressureLabel.setForeground(bgColor);
+		dymPressureLabel.setFont(smallFont);
+
 		atmoDenLabel = new JLabel("N/A");
+		atmoDenLabel.setForeground(bgColor);
+		atmoDenLabel.setFont(smallFont);
+
 		apoLabel = new JLabel("N/A");
+		apoLabel.setForeground(bgColor);
+		apoLabel.setFont(smallFont);
+
 		periLabel = new JLabel("N/A");
+		periLabel.setForeground(bgColor);
+		periLabel.setFont(smallFont);
+
 		periodLabel = new JLabel("N/A");
+		periodLabel.setForeground(bgColor);
+		periodLabel.setFont(smallFont);
 
 		horizontalSpeedLabel = new JLabel("N/A");
+		horizontalSpeedLabel.setForeground(bgColor);
+		horizontalSpeedLabel.setFont(smallFont);
+
 		verticalSpeedLabel = new JLabel("N/A");
+		verticalSpeedLabel.setForeground(bgColor);
+		verticalSpeedLabel.setFont(smallFont);
+
 		orbSpeedLabel = new JLabel("N/A");
+		orbSpeedLabel.setForeground(bgColor);
+		orbSpeedLabel.setFont(smallFont);
 
-		tLabel = new JLabel("tGo: N/A");
+		tLabel = new JLabel("N/A");
+		tLabel.setForeground(bgColor);
+		tLabel.setFont(smallFont);
 
+		tLabel.setBackground(Color.red);
+		tLabel.setOpaque(false);
 		f.add(utLabel);
 
-		f.add(metLabel);
-		f.add(headingLabel);
-		f.add(pitchLabel);
-		f.add(rollLabel);
-		f.add(vesselStatusLabel);
-		f.add(throttleLabel);
-		f.add(thrustLabel);
-		f.add(accelLabel);
+		panel.add(metLabel);
+		panel.add(headingLabel);
+		panel.add(pitchLabel);
+		panel.add(rollLabel);
+		panel.add(vesselStatusLabel);
+		panel.add(throttleLabel);
+		panel.add(thrustLabel);
+		panel.add(accelLabel);
 
-		f.add(dymPressureLabel);
-		f.add(atmoDenLabel);
+		panel.add(dymPressureLabel);
+		panel.add(atmoDenLabel);
 
-		f.add(apoLabel);
-		f.add(periLabel);
-		f.add(periodLabel);
+		panel.add(apoLabel);
+		panel.add(periLabel);
+		panel.add(periodLabel);
 
-		f.add(horizontalSpeedLabel);
-		f.add(verticalSpeedLabel);
-		f.add(orbSpeedLabel);
+		panel.add(horizontalSpeedLabel);
+		panel.add(verticalSpeedLabel);
+		panel.add(orbSpeedLabel);
 
-		f.add(tLabel);
-
-		f.setLayout(new GridLayout(9, 9)); // using no layout managers
-		f.setVisible(true);// making the frame visible
+		panel.add(tLabel);
+		panel.setBackground(Color.BLACK);
+		f.add(panel);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.setVisible(true);
 
 	}
 
@@ -166,12 +219,6 @@ public class FlightUI {
 	{
 		if (runGUI)
 		{
-//			updateMissionTime();
-//			updateFlightAngles();
-//			setFlightModeLabel();
-//			updateVehiclePreformace();
-//			updateVehicleAndSurroundings();
-//			updateSpeed();
 			switch (flightMode) {
 
 			case preprogramed:
@@ -209,14 +256,15 @@ public class FlightUI {
 			double apo = orbit.getApoapsisAltitude();
 			double per = orbit.getPeriapsisAltitude();
 			double period = orbit.getPeriod();
-			
+
 			double q = qStream.get();
 			double atmoDen = atmDen.get();
 
 			dymPressureLabel
 					.setText("Vehicle is experiencing " + String.format("%.2f", q / 1.0e3) + " kP of dynamic pressure");
 			atmoDenLabel.setText("Surrounding atmo density is " + String.format("%.2f", atmoDen) + " kg/m^3");
-			apoLabel.setText("Orbit dimensions " + String.format("%.2f", apo / 1.0e3) + " km x " + String.format("%.2f", per / 1.0e3) + " km");
+			apoLabel.setText("Orbit dimensions " + String.format("%.2f", apo / 1.0e3) + " km x "
+					+ String.format("%.2f", per / 1.0e3) + " km");
 			periodLabel.setText("Orbit has a " + String.format("%.2f", period / 60.) + " minute period");
 			periLabel.setText("Current altitude " + String.format("%.2f", altStream.get()) + " m");
 
@@ -260,7 +308,14 @@ public class FlightUI {
 
 	private void updateT()
 	{
-		tLabel.setText("T to go " + String.format("%.2f", TGo) + " s");
+		if (flightMode != FlightMode.terminalMains)
+		{
+			tLabel.setText("T to go " + String.format("%.2f", TGo) + " s");
+		} else
+		{
+			tLabel.setText("Pushing apogee to target");
+
+		}
 	}
 
 	private void updateSpeed()
@@ -268,9 +323,9 @@ public class FlightUI {
 		try
 		{
 			horizontalSpeedLabel.setText("Vehicle is travelling at " + String.format("%.2f", hSpeedStream.get())
-					+ " m/s in the surface horizontal dir");
+					+ " m/s in the surface horizontal");
 			verticalSpeedLabel.setText("Vehicle is travelling at " + String.format("%.2f", vSpeedStream.get())
-					+ " m/s in the surface vertical dir");
+					+ " m/s in the surface vertical");
 			orbSpeedLabel.setText("Vehicle's orbital speed is " + String.format("%.2f", orbSpeedStream.get()) + " m/s");
 		} catch (RPCException | StreamException e)
 		{
@@ -280,8 +335,6 @@ public class FlightUI {
 
 	private double acceleration(Vessel vessel, double thrust) throws RPCException
 	{
-		// F = ma
-		// A = F/m
 		return thrust / vessel.getMass();
 	}
 

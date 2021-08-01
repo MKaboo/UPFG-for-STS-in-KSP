@@ -1,4 +1,4 @@
-package flightComputer;
+package shuttleGuidance;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.math3.util.FastMath;
 import org.javatuples.Triplet;
 
-import flightComputer.FlightUI.FlightMode;
 import krpc.client.Connection;
 import krpc.client.RPCException;
 import krpc.client.Stream;
@@ -25,6 +24,7 @@ import krpc.client.services.SpaceCenter.Control;
 import krpc.client.services.SpaceCenter.Engine;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
+import shuttleGuidance.FlightUI.FlightMode;
 
 public class ShuttleAscent2 {
 
