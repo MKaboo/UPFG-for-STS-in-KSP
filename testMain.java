@@ -19,8 +19,6 @@ public class testMain {
 	public static void main(String[] args) throws IOException, RPCException, InterruptedException, StreamException
 	{
 
-		System.out.println(ShuttleGuidanceConstants.getLandingSites().toString());
-
 		HashMap<String, LandingFacilities> test = ShuttleGuidanceConstants.getLandingSites();
 		ArrayList<String> runwayNames = ShuttleGuidanceConstants.getFacilitiesNames();
 
