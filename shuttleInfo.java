@@ -1,4 +1,4 @@
-package shuttleGuidance;
+package shuttleGuidance.reentry;
 
 public class shuttleInfo {
 
@@ -6,25 +6,25 @@ public class shuttleInfo {
 	private final double MAXALPHAMODULATION = 3d;
 	private double heading;
 	private double bankAngle; // roll around velocity
-	private EntryConditions ec = EntryConditions.standby;
+	private EntryConditions ec = null;
 	
 	
-	public EntryConditions getEc()
+	protected EntryConditions getEc()
 	{
 		return ec;
 	}
 
 
 
-	public void setEc(EntryConditions ec)
+	protected void setEc(EntryConditions ec)
 	{
 		this.ec = ec;
 	}
 
 
 
-	public shuttleInfo() {
-		// TODO Auto-generated constructor stub
+	protected shuttleInfo() {
+		ec = EntryConditions.standby;
 	}
 	
 	

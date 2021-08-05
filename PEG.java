@@ -1,4 +1,4 @@
-package shuttleGuidance;
+package shuttleGuidance.launch;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import krpc.client.services.SpaceCenter.Engine;
 import krpc.client.services.SpaceCenter.Node;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
-import shuttleGuidance.FlightUI.FlightMode;
+import shuttleGuidance.launch.FlightUI.FlightMode;
 
 public class PEG {
 
@@ -386,14 +386,15 @@ public class PEG {
 
 	private void evasionAndCircularization() throws RPCException, InterruptedException, StreamException
 	{
+		flightUI.updateGUI();
 		Stream<Double> metStream = connection.addStream(vessel, "getMET");
 		vesselControl.setThrottle(0);
 		vesselControl.setActionGroup(1, true);
-
+		flightUI.updateGUI();
 		smartASS.setSurfacePitch(0);
 		smartASS.setSurfaceRoll(180);
 		smartASS.update(false);
-
+		flightUI.updateGUI();
 		vesselControl.setUp(-0.5f);
 		rcsHoldLoop(metStream, vessel, 6, 100);
 
@@ -498,7 +499,7 @@ public class PEG {
 
 			if (allowWarp)
 			{
-				spaceCenter.warpTo(nodeTimePlusMargin - 10, 1, 3);
+				spaceCenter.warpTo(nodeTimePlusMargin - 10, 2, 3);
 			}
 
 			while (ut.get() < nodeTimePlusMargin)
@@ -514,6 +515,7 @@ public class PEG {
 
 			while (ut.get() < nodeTimeBurn)
 			{
+				flightUI.updateGUI();
 				TimeUnit.MILLISECONDS.sleep(250);
 			}
 
@@ -521,7 +523,7 @@ public class PEG {
 
 			while (node.getRemainingDeltaV() >= 5.0)
 			{
-
+				flightUI.updateGUI();
 				TimeUnit.MILLISECONDS.sleep(500);
 
 			}
@@ -559,12 +561,12 @@ public class PEG {
 		double oldTime = currentTime;
 		while (FastMath.abs(currentTime - oldTime) <= timeDif)
 		{
-
+			flightUI.updateGUI();
 			currentTime = stream.get();
 			TimeUnit.MILLISECONDS.sleep(sleepAmount);
 
 		}
-
+		flightUI.updateGUI();
 	}
 
 	private void terminalGuidance(final Vessel vessel, final ReferenceFrame referenceFrame, final Stream<Triplet<Double, Double, Double>> positionStream, final Stream<Triplet<Double, Double, Double>> velocityStream, final double deltaV) throws RPCException, StreamException, InterruptedException
@@ -577,6 +579,8 @@ public class PEG {
 		smartASS.update(false);
 		while (vessel.getOrbit().getApoapsisAltitude() < parkingApoM)
 		{
+			maintain3G();
+			flightUI.updateGUI();
 			TimeUnit.MILLISECONDS.sleep(100);
 		}
 		vesselControl.setThrottle(0.01f);
@@ -584,6 +588,7 @@ public class PEG {
 		smartASS.update(false);
 		vesselControl.setThrottle(0);
 		flightUI.setFlightMode(FlightMode.evasion);
+		flightUI.updateGUI();
 	}
 
 	private double[] calcDeltaVandT() throws RPCException

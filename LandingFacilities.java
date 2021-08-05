@@ -1,6 +1,6 @@
-package shuttleGuidance;
+package shuttleGuidance.reentry;
 
-class LandingFacilities
+final class LandingFacilities
 {
 	private final String name;
 	private final double latitude;

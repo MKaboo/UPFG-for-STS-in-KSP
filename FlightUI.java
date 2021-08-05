@@ -1,4 +1,4 @@
-package shuttleGuidance;
+package shuttleGuidance.launch;
 
 import java.awt.Color;
 import java.awt.Font;

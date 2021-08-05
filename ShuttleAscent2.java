@@ -1,4 +1,4 @@
-package shuttleGuidance;
+package shuttleGuidance.launch;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ import krpc.client.services.SpaceCenter.Control;
 import krpc.client.services.SpaceCenter.Engine;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
-import shuttleGuidance.FlightUI.FlightMode;
+import shuttleGuidance.launch.FlightUI.FlightMode;
 
 public class ShuttleAscent2 {
 
@@ -72,7 +72,9 @@ public class ShuttleAscent2 {
 		smartASS.setForceRoll(true);
 		smartASS.setInterfaceMode(SmartASSInterfaceMode.SURFACE);
 		smartASS.setAutopilotMode(SmartASSAutopilotMode.SURFACE);
-		smartASS.setSurfaceHeading(90);
+		
+		
+		//smartASS.setSurfaceHeading(90);
 		smartASS.setSurfacePitch(90);
 		smartASS.setSurfaceRoll(0);
 

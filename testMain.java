@@ -1,4 +1,4 @@
-package shuttleGuidance;
+package shuttleGuidance.reentry;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,8 +19,8 @@ public class testMain {
 	public static void main(String[] args) throws IOException, RPCException, InterruptedException, StreamException
 	{
 
-		HashMap<String, LandingFacilities> test = ShuttleGuidanceConstants.getLandingSites();
-		ArrayList<String> runwayNames = ShuttleGuidanceConstants.getFacilitiesNames();
+		HashMap<String, LandingFacilities> test = ShuttleLandingSitesConstants.getLandingSites();
+		ArrayList<String> runwayNames = ShuttleLandingSitesConstants.getFacilitiesNames();
 
 		for (String string : runwayNames)
 		{
