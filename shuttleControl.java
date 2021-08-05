@@ -13,39 +13,28 @@ class shuttleControl
 	private Vessel vessel;
 	
 	private MechJeb mj;
-	private Flight flight;
+	
 	private ReferenceFrame referenceFrame = null;
 	private SmartASS smartASS;
 	
-	shuttleControl(final Vessel vessel, final MechJeb mj) {
+	shuttleControl(final Vessel vessel, final MechJeb mj, final ReferenceFrame referenceFrame) {
 		super();
 		this.vessel = vessel;
 		this.mj = mj;
-		
+		this.referenceFrame = referenceFrame;
 		try
 		{
 			mj.getSmartASS();
-			referenceFrame = vessel.getOrbit().getBody().getReferenceFrame();
+			
 		} catch (RPCException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		setFlight();
+		
 	}
 	
 	
-	private void setFlight()
-	{
-		try
-		{
-			flight = vessel.flight(referenceFrame);
-		} catch (RPCException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 	
 	private void setMechjebConditions(SmartASSAutopilotMode assAutopilotMode)
 	{
