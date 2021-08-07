@@ -3,18 +3,20 @@ package shuttleGuidance.reentry;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.commons.math3.util.FastMath;
+
 class ShuttleLandingSitesConstants {
 
-	private static HashMap<String, LandingFacilities> landingSites;
+	private static HashMap<String, LandingFacility> landingSites;
 	private static ArrayList<String> facilitiesNames;
 	
 
 	
 	static
 	{
-		LandingFacilities KSC15 = new LandingFacilities("SLF-15", 28.36540, -80.41402, 3, 150, 4600);
-		LandingFacilities KSC33 = new LandingFacilities("SLF-33", 28.36540, -80.41402, 3, 330, 4600);
-		LandingFacilities EAFB22 = new LandingFacilities("EAFB-22", 34.905798, -117.883003, 704.3, 220, 4579);
+		LandingFacility KSC15 = new LandingFacility("SLF-15",FastMath.toRadians(28.615), FastMath.toRadians(-80.6945), 3, 150, 4600);
+		LandingFacility KSC33 = new LandingFacility("SLF-33", FastMath.toRadians(28.615), FastMath.toRadians(-80.6945), 3, 330, 4600);
+		LandingFacility EAFB22 = new LandingFacility("EAFB-22", FastMath.toRadians(34.905798), FastMath.toRadians(-117.883003), 704.3, 220, 4579);
 
 		
 		landingSites = new HashMap<>();
@@ -25,13 +27,13 @@ class ShuttleLandingSitesConstants {
 		addLocation(EAFB22);
 	}
 	
-	private static void addLocation(LandingFacilities lf)
+	private static void addLocation(LandingFacility lf)
 	{
 		landingSites.put(lf.getName(), lf);
 		facilitiesNames.add(lf.getName());
 	}
 	
-	protected static HashMap<String, LandingFacilities> getLandingSites()
+	protected static HashMap<String, LandingFacility> getLandingSites()
 	{
 		return landingSites;
 	}
