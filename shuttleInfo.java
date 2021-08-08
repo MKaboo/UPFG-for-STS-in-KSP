@@ -8,13 +8,14 @@ import krpc.client.Connection;
 import krpc.client.RPCException;
 import krpc.client.Stream;
 import krpc.client.StreamException;
+import krpc.client.services.SpaceCenter.Control;
 import krpc.client.services.SpaceCenter.Flight;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
 
 public class shuttleInfo {
 
-	private double AOA; // pitch
+	private double AOA = 40; // pitch
 	private final double MAXALPHAMODULATION = 3d;
 	private double heading;
 	private double bankAngle; // roll around velocity
@@ -26,6 +27,9 @@ public class shuttleInfo {
 	private Connection connection;
 	private Stream<Double> longitudeStream;
 	private Stream<Double> altitudeStream;
+	private Control vesselControl;
+	private double deorbitPE; 
+	
 	/**
 	 * @param vessel
 	 * @param referenceFrame
@@ -36,6 +40,15 @@ public class shuttleInfo {
 		this.referenceFrame = referenceFrame;
 		setEc(EntryConditions.standby);
 		setFlight();
+		try
+		{
+			vesselControl = vessel.getControl();
+			deorbitPE = 30000 - (vessel.getMass() * 400);
+		} catch (RPCException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 	}
 
 	protected EntryConditions getEc()
@@ -106,6 +119,24 @@ public class shuttleInfo {
 		}
 		return 0;
 	}
+
+	/**
+	 * @return the deorbitPE
+	 */
+	protected double getDeorbitPE()
+	{
+		return deorbitPE;
+	}
+
+	
+	/**
+	 * @return the vesselControl
+	 */
+	public Control getVesselControl()
+	{
+		return vesselControl;
+	}
+
 
 	enum EntryConditions {
 		standby, deorbit, reentry, approach, landing
