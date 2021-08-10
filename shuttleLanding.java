@@ -32,6 +32,7 @@ public class shuttleLanding {
 	private ReferenceFrame referenceFrame;
 	private CelestialBody host;
 	private Node node;
+
 	public shuttleLanding() {
 		initConnections();
 		run();
@@ -52,11 +53,9 @@ public class shuttleLanding {
 
 		findShortestDistance();
 		sc.startLoop(connection);
-
+		sc.deorbit(sInfo);
 	}
 
-	
-	
 	private void initConnections()
 	{
 		try
@@ -148,6 +147,20 @@ public class shuttleLanding {
 			}
 			// spaceCenter.warpTo(shortestDistAt, 1000, 4);
 
+		} catch (RPCException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void checkInclination(Node node, double time)
+	{
+
+		try
+		{
+			final Vector3D position = toV3D(node.getOrbit().positionAt(time, referenceFrame));
+			
 		} catch (RPCException e)
 		{
 			// TODO Auto-generated catch block
