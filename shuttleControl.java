@@ -27,7 +27,11 @@ class shuttleControl {
 	private Control vControl; 
 	private ReferenceFrame referenceFrame = null;
 	private SmartASS smartASS;
-
+	
+	private double envAlt = 0;
+	private double envLong = 0;
+	
+	
 	shuttleControl(final Vessel vessel, final MechJeb mj, final ReferenceFrame referenceFrame) {
 		super();
 		this.vessel = vessel;
@@ -48,10 +52,44 @@ class shuttleControl {
 	}
 	
 	
-//	protected void mainGuidanceLoop()
-//	{
-//		if()
-//	}
+	protected void mainGuidanceLoop(shuttleInfo si, LandingFacility landingSite)
+	{
+		
+		
+		
+		int mode = 4;
+		if(si.getShuttleAltitude() > 140000) 
+		{
+			mode = 1;
+		}
+		while (mode > 0)
+		{
+			switch (mode) {
+			case 1:
+			{
+				
+				break;
+			}
+			case 2:
+			{
+				
+				break;
+			}
+			case 3:
+			{
+				
+				break;
+			}
+			case 4:
+			{
+				
+				break;
+			}
+			default:
+				throw new IllegalArgumentException("Unexpected value: " + mode);
+			}
+		}
+	}
 	
 
 	protected void setMechjebConditions(SmartASSAutopilotMode assAutopilotMode, SmartASSInterfaceMode interfaceMode)

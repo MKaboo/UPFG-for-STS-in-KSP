@@ -54,7 +54,7 @@ public class shuttleLanding {
 
 			findShortestDistance();
 			System.out.println(sInfo.getDeorbitDistance());
-			LandingFacility lf = ShuttleLandingSitesConstants.getLandingSites().get("SLF-33");
+			LandingFacility lf = selectedLandingSite;
 			boolean go = true;
 			while (go)
 			{
@@ -233,9 +233,6 @@ public class shuttleLanding {
 				bar.time = time;
 				// node.setUT(bar.time);
 
-			} else
-			{
-				return bar;
 			}
 
 		}

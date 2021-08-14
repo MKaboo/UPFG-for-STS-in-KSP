@@ -35,7 +35,12 @@ public class shuttleInfo {
 	private Control vesselControl;
 	private double deorbitPE;
 	private double deorbitDistance;
-
+	private boolean headCorrect = false;
+	private double degDist;
+	
+	
+	private double bounce = 0;
+	
 	protected Node node;
 	protected boolean sTurn = true;
 	private Stream<Double> inclinationStream;
@@ -174,11 +179,51 @@ public class shuttleInfo {
 
 	}
 
-	protected void east()
+	protected Vector3D eastFor()
+	{
+		Vector3D vector3d = new Vector3D(0, 0, 1.0);
+		return vector3d;
+		
+	}
+	protected double pitchFor() 
+	{
+		Vector3D foreZAxis = new Vector3D(0, 1.0, 0);
+		return 90 - FastMath.toDegrees(Vector3D.angle(foreZAxis,foreZAxis));
+	}
+	protected double compassFor()
 	{
 
-	}
+		Vector3D pointing = new Vector3D(0, 1.0, 0);
+		Vector3D east = eastFor();
+		
+		double trigX = Vector3D.dotProduct(pointing, pointing);
+		double trigY = Vector3D.dotProduct(east, pointing);
 
+		double result = FastMath.atan2(trigY, trigX);
+		
+		if (result < 0) { 
+			return 360 + result;
+		} else {
+			return result;
+		}
+	}
+	
+	protected void directCalc()
+	{
+		try
+		{
+			double currentPitch = flight.getPitch();
+			//double currentYaw = flight.
+		} catch (RPCException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	
 	public Control getVesselControl()
 	{
 		return vesselControl;
@@ -187,6 +232,38 @@ public class shuttleInfo {
 	public double getDeorbitDistance()
 	{
 		return deorbitDistance;
+	}
+
+	/**
+	 * @return the bounce
+	 */
+	public double getBounce()
+	{
+		return bounce;
+	}
+
+	/**
+	 * @param bounce the bounce to set
+	 */
+	public void setBounce(double bounce)
+	{
+		this.bounce = bounce;
+	}
+
+	/**
+	 * @return the headCorrect
+	 */
+	public boolean isHeadCorrect()
+	{
+		return headCorrect;
+	}
+
+	/**
+	 * @param headCorrect the headCorrect to set
+	 */
+	public void setHeadCorrect(boolean headCorrect)
+	{
+		this.headCorrect = headCorrect;
 	}
 
 	enum EntryConditions {
