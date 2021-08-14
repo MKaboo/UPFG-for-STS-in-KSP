@@ -2,6 +2,8 @@ package shuttleGuidance.reentry;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.apache.commons.math3.util.FastMath;
 import org.javatuples.Triplet;
 
 import krpc.client.Connection;
@@ -10,15 +12,18 @@ import krpc.client.Stream;
 import krpc.client.StreamException;
 import krpc.client.services.SpaceCenter.Control;
 import krpc.client.services.SpaceCenter.Flight;
+import krpc.client.services.SpaceCenter.Node;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
 
 public class shuttleInfo {
 
-	private double AOA = 40; // pitch
-	private final double MAXALPHAMODULATION = 3d;
+	double AOA = 40; // pitch
+	final double MAXALPHAMODULATION = 3d;
+	final double PitchDownAlt = 35000d;
+
 	private double heading;
-	private double bankAngle; // roll around velocity
+	private double bankAngle = 0; // roll around velocity
 	private EntryConditions ec = null;
 	private Flight flight;
 	private Vessel vessel;
@@ -28,8 +33,13 @@ public class shuttleInfo {
 	private Stream<Double> longitudeStream;
 	private Stream<Double> altitudeStream;
 	private Control vesselControl;
-	private double deorbitPE; 
-	
+	private double deorbitPE;
+	private double deorbitDistance;
+
+	protected Node node;
+	protected boolean sTurn = true;
+	private Stream<Double> inclinationStream;
+
 	/**
 	 * @param vessel
 	 * @param referenceFrame
@@ -43,12 +53,17 @@ public class shuttleInfo {
 		try
 		{
 			vesselControl = vessel.getControl();
-			deorbitPE = 30000 - (vessel.getMass() * 400);
+			deorbitPE = 30000. - (vessel.getMass() * 400.);
+
+			deorbitDistance = 17960 + (7.5 * FastMath.toDegrees(vessel.getOrbit().getInclination()))
+					+ ((vessel.getMass() - 83) * 25.);
+			System.out.println(FastMath.toDegrees(vessel.getOrbit().getInclination()));
+			System.out.println(deorbitDistance);
 		} catch (RPCException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
+		}
 	}
 
 	protected EntryConditions getEc()
@@ -61,7 +76,7 @@ public class shuttleInfo {
 		try
 		{
 			flight = vessel.flight(referenceFrame);
-			
+
 			latitudeStream = connection.addStream(flight, "getLatitude");
 			latitudeStream.start();
 			longitudeStream = connection.addStream(flight, "getLongitude");
@@ -74,6 +89,11 @@ public class shuttleInfo {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	protected void setNode(Node thisNode)
+	{
+		node = thisNode;
 	}
 
 	protected void setEc(EntryConditions ec)
@@ -106,7 +126,7 @@ public class shuttleInfo {
 		}
 		return 0;
 	}
-	
+
 	protected double getShuttleAltitude()
 	{
 		try
@@ -120,23 +140,54 @@ public class shuttleInfo {
 		return 0;
 	}
 
-	/**
-	 * @return the deorbitPE
-	 */
 	protected double getDeorbitPE()
 	{
 		return deorbitPE;
 	}
 
-	
-	/**
-	 * @return the vesselControl
-	 */
+	protected double getDirection(double lat1, double lon1, double lat2, double lon2)
+	{
+		double φ1 = lat1 * FastMath.PI / 180.0;
+		double φ2 = lat2 * FastMath.PI / 180.0;
+		double λ1 = lon1 * FastMath.PI / 180.0;
+		double λ2 = lon2 * FastMath.PI / 180.0;
+
+		double y = FastMath.sin(λ1 - λ1) * FastMath.cos(φ2);
+		double x = FastMath.cos(φ1) * FastMath.sin(φ2) - FastMath.sin(φ1) * FastMath.cos(φ2) * FastMath.cos(λ2 - λ1);
+		double θ = FastMath.atan2(y, x);
+		double brng = (θ * 180.0 / FastMath.PI + 360.0) % 360.0; // in degrees
+
+		return brng;
+	}
+
+	protected double getDistance(double lat1, double lon1, double lat2, double lon2, double rad)
+	{
+		double φ1 = lat1 * FastMath.PI / 180.0;
+		double φ2 = lat2 * FastMath.PI / 180.0;
+		double Δφ = (lat2 - lat1) * FastMath.PI / 180.0;
+		double Δλ = (lon2 - lon1) * FastMath.PI / 180.0;
+		double a = FastMath.sin(Δφ / 2.0) * FastMath.sin(Δφ / 2.0)
+				+ FastMath.cos(φ1) * FastMath.cos(φ2) * FastMath.sin(Δλ / 2.0) * FastMath.sin(Δλ / 2.0);
+		double c = 2.0 * FastMath.atan2(FastMath.sqrt(a), FastMath.sqrt(1 - a));
+		double d = rad * c;
+		return d;
+
+	}
+
+	protected void east()
+	{
+
+	}
+
 	public Control getVesselControl()
 	{
 		return vesselControl;
 	}
 
+	public double getDeorbitDistance()
+	{
+		return deorbitDistance;
+	}
 
 	enum EntryConditions {
 		standby, deorbit, reentry, approach, landing

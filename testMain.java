@@ -25,7 +25,7 @@ import shuttleGuidance.reentry.shuttleInfo.EntryConditions;
 
 public class testMain {
 
-	private static final double SECTIONOFCIRCLE = 720.;
+	private static final double SECTIONOFCIRCLE = 360.;
 	private Connection connection;
 	private SpaceCenter spaceCenter;
 	private Vessel vessel;
@@ -87,9 +87,7 @@ public class testMain {
 	{
 		try
 		{
-			//HashMap<String, foo> timeAndDistance = new HashMap<String, foo>();
-			//ArrayList<Double> times = new ArrayList<>();
-			//ArrayList<Double> distances = new ArrayList<>();
+			// HashMap<String, foo> timeAndDistance = new HashMap<String, foo>();
 
 			double now = spaceCenter.getUT();
 			List<Node> listOfNodes = vessel.getControl().getNodes();
@@ -99,6 +97,7 @@ public class testMain {
 				if (node != null)
 				{
 					node.remove();
+
 				}
 			}
 			foo bar = new foo();
@@ -111,24 +110,45 @@ public class testMain {
 
 			double utMargin = period / SECTIONOFCIRCLE;
 
-			TimeUnit.SECONDS.sleep(5);
+			TimeUnit.SECONDS.sleep(1);
 
 			for (int orbitCount = 0; orbitCount < ShuttleLandingSitesConstants.MaxNumberOfOrbitsToCheck; ++orbitCount)
 			{
-				foo b2 = findMinFooForOrbit(orbitCount, period, now, orbit);
-
-				if (bar.distance > b2.distance)
+				foo b2 = null;
+				for (Entry<String, LandingFacility> landingFacilityEntry : ShuttleLandingSitesConstants
+						.getLandingSites().entrySet())
 				{
-					bar = b2;
+					b2 = findMinFooForOrbit(orbitCount, period, now, orbit, landingFacilityEntry.getValue());
 
+					if (bar.distance > b2.distance)
+					{
+						bar = b2;
+
+						node.setUT(bar.time);
+						System.out.println(bar.getLf().getName());
+						TimeUnit.SECONDS.sleep(1);
+						// System.out.println(bar.time);
+
+					}
+				}
+				if (bar.getDistance() >= ShuttleLandingSitesConstants.MAXIMUMLANDINGSITEDIF)
+				{
+					System.out.println(bar.getDistance());
+					spaceCenter.warpTo(now + period, 1000, 5);
+					findShortestDistance();
+				} else
+				{
 					node.setUT(bar.time);
-
-					TimeUnit.SECONDS.sleep(1);
+					System.out.println("Found runway");
 					System.out.println(bar.time);
+					System.out.println(bar.distance);
+					System.out.println(bar.getLf());
+					break;
 				}
 
 			}
-			node.setUT(bar.getTime());
+
+			node.setUT(bar.getTime() - (period / 2.));
 			try
 			{
 
@@ -136,21 +156,22 @@ public class testMain {
 			} catch (IOException e)
 			{
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 
 		} catch (RPCException e)
 		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// e.printStackTrace();
 		} catch (InterruptedException e1)
 		{
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			// e1.printStackTrace();
 		}
+		
 	}
 
-	private foo findMinFooForOrbit(int orbitCount, double period, double now, Orbit orbit) throws RPCException
+	private foo findMinFooForOrbit(int orbitCount, double period, double now, Orbit orbit, LandingFacility lF) throws RPCException
 	{
 		foo bar = new foo();
 
@@ -163,41 +184,29 @@ public class testMain {
 		{
 
 			final double time = (sliceOfCicle * utMargin) + orbitStarttime;
-
+			node.setUT(time);
 			final Vector3D position = toV3D(orbit.positionAt(time, referenceFrame));
 
-//			for (Entry<String, LandingFacility> landingFacilityEntry : ShuttleLandingSitesConstants
-//					.getLandingSites().entrySet())
-			{
-				LandingFacility landingFacility = ShuttleLandingSitesConstants.getLandingSites().get("SLF-33");
+
+				LandingFacility landingFacility = lF;
 
 				Vector3D landingSitePosition = geodeticToECEF(landingFacility, host.getEquatorialRadius());
-//		System.out.println(landingSitePosition.toString());
 				double dis = distance(position, landingSitePosition);
 
-				System.out.println("dis : " + orbitCount + " , " + dis);
 
 				if (bar.distance > dis)
 				{
 					bar.distance = dis;
-
+					bar.lf = lF;
 					bar.time = time;
-					node.setUT(bar.time);
-					System.out.println("loopcount: " + sliceOfCicle);
-					System.out.println("min for " + orbitCount + " , " + bar.distance);
-
-					System.out.println("landingSitePosition : " + landingSitePosition);
-					System.out.println("position : " + position);
+					// node.setUT(bar.time);
 
 				}
-				else
-				{
-					break;
-				}
-			}
+				
+
+			
 
 		}
-		System.out.println("done");
 
 		return bar;
 	}
@@ -318,6 +327,7 @@ public class testMain {
 		private double time;
 		private int orbitNumber;
 		private int sliceNumber;
+		private LandingFacility lf;
 
 		protected double getDistance()
 		{
@@ -359,11 +369,27 @@ public class testMain {
 			this.sliceNumber = sliceNumber;
 		}
 
+		/**
+		 * @return the lf
+		 */
+		protected LandingFacility getLf()
+		{
+			return lf;
+		}
+
+		/**
+		 * @param lf the lf to set
+		 */
+		protected void setLf(LandingFacility lf)
+		{
+			this.lf = lf;
+		}
+
 		@Override
 		public String toString()
 		{
 			return "foo [distance=" + distance + ", time=" + time + ", orbitNumber=" + orbitNumber + ", sliceNumber="
-					+ sliceNumber + "]";
+					+ sliceNumber + ", lf=" + lf + "]";
 		}
 
 	}

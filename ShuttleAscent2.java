@@ -88,7 +88,7 @@ public class ShuttleAscent2 {
 		flightUI.start();
 		
 		initializeTWR();
-		findLaunchCorridor(300, 240, 30, false);
+		findLaunchCorridor(300, 300, 35, false);
 		countdown();
 		launch();
 
@@ -282,7 +282,7 @@ public class ShuttleAscent2 {
 				case verticalAscent: {
 					if (MET > 6)
 					{
-						smartASS.setSurfaceHeading(heading);
+						//smartASS.setSurfaceHeading(heading);
 						vs = vesselState.rollOver;
 					}
 					break;

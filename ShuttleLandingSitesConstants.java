@@ -9,8 +9,8 @@ class ShuttleLandingSitesConstants {
 
 	private static HashMap<String, LandingFacility> landingSites;
 	private static ArrayList<String> facilitiesNames;
-	final  static double MAXIMUMLANDINGSITEDIF = 5.e5;
-	final protected static int MaxNumberOfOrbitsToCheck = 3;
+	final  static double MAXIMUMLANDINGSITEDIF = 300000.;
+	final protected static int MaxNumberOfOrbitsToCheck = 1;
 
 	
 	static
