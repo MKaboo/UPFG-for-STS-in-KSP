@@ -1,7 +1,6 @@
 package shuttleGuidance.reentry;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -19,7 +18,6 @@ import krpc.client.services.SpaceCenter.Node;
 import krpc.client.services.SpaceCenter.Orbit;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
-import shuttleGuidance.reentry.shuttleInfo.EntryConditions;
 
 public class Deorbit {
 
@@ -36,7 +34,14 @@ public class Deorbit {
 
 	public Deorbit() {
 		initConnections();
-		run();
+		try
+		{
+			run();
+		} catch (RPCException e)
+		{
+			
+			e.printStackTrace();
+		}
 	}
 
 	public static void main(String[] args)
@@ -44,18 +49,51 @@ public class Deorbit {
 		new Deorbit();
 	}
 
-	private void run()
+	private void run() throws RPCException
 	{
 
-		shuttleControl sc = new shuttleControl(vessel, mj, referenceFrame);
-		shuttleInfo sInfo = new shuttleInfo(connection, vessel, referenceFrame);
 
-		EntryConditions ecc = sInfo.getEc();
+		//EntryConditions ecc = sInfo.getEc();
 
 		findShortestDistance();
+		setDeorbitNode();
 		//setup re-entry info here
 		Reentry reentryControl = new Reentry(connection,spaceCenter,vessel,host, mj);
 		reentryControl.start();
+	}
+	private double visViva(double deorbitPeri) throws RPCException
+	{
+		Triplet<Double, Double, Double> tripletNodePosition = node.position(referenceFrame);
+		//Vector3D v3dNodePosition = toV3D(tripletNodePosition);
+		//double circularOrbitAltitudeApproximation = v3dNodePosition.dotProduct(v3dNodePosition);
+		double circularOrbitAltitudeApproximation = host.altitudeAtPosition(tripletNodePosition, referenceFrame);
+		System.out.println("Orbit height at the node is " + circularOrbitAltitudeApproximation);
+		
+		double r = circularOrbitAltitudeApproximation; 
+		double a = (r+deorbitPeri)/2;
+		
+		try
+		{
+			double v = FastMath.sqrt(host.getGravitationalParameter() * ((2/r) - (1/a)));
+			return v;
+		} catch (RPCException e)
+		{
+			e.printStackTrace();
+		}
+		return 0;
+	}
+	private void setDeorbitNode() throws RPCException 
+	{
+		double requiredV = visViva(76200);
+		try
+		{
+			node.setPrograde(-1 * requiredV);
+			
+		} catch (RPCException e)
+		{
+			
+			e.printStackTrace();
+		}
 	}
 
 	private void initConnections()
@@ -95,7 +133,6 @@ public class Deorbit {
 	{
 		try
 		{
-
 			clearNodes();
 
 			double now = spaceCenter.getUT();
@@ -124,24 +161,27 @@ public class Deorbit {
 
 						double theta = FastMath.acos(shuttlePosition.dotProduct(lfPosition));
 						theta = FastMath.abs(theta);
-						// TODO fix the angle in radians
-
+						
+						//TODO fix the angle in radians
 						if (theta > FastMath.PI - FastMath.toRadians(1))
 						{
+							node.setUT(time);
 							System.out.println("Acceptible deorbit point found");
 							System.out.println("Landing site is " + landingFacilityEntry.getKey() );
-							System.out.println("Time to deorbit: " + (time-now) + " in seconds");
+							System.out.println("Time to deorbit node: " + (time-now) + " in seconds");
+					
 							
-							node.setUT(time);
 							return;
 						}
 					}
+					
 				}
+				System.out.println("No deorbit found in #" + orbitCount + " orbit" );
 			}
+			System.err.println("Landing impossible due to no valid deorbit point within " + ShuttleLandingSitesConstants.MaxNumberOfOrbitsToCheck + " orbits");
 
 		} catch (Exception e)
 		{
-			// TODO: handle exception
 		}
 	}
 
@@ -168,79 +208,4 @@ public class Deorbit {
 
 	}
 
-	
-
-
-
-//	static class foo {
-//		private double distance;
-//		private double time;
-//		private int orbitNumber;
-//		private int sliceNumber;
-//		private LandingFacility lf;
-//
-//		protected double getDistance()
-//		{
-//			return distance;
-//		}
-//
-//		protected void setDistance(double distance)
-//		{
-//			this.distance = distance;
-//		}
-//
-//		protected double getTime()
-//		{
-//			return time;
-//		}
-//
-//		protected void setTime(double time)
-//		{
-//			this.time = time;
-//		}
-//
-//		protected int getOrbitNumber()
-//		{
-//			return orbitNumber;
-//		}
-//
-//		protected void setOrbitNumber(int orbitNumber)
-//		{
-//			this.orbitNumber = orbitNumber;
-//		}
-//
-//		protected int getSliceNumber()
-//		{
-//			return sliceNumber;
-//		}
-//
-//		protected void setSliceNumber(int sliceNumber)
-//		{
-//			this.sliceNumber = sliceNumber;
-//		}
-//
-//		/**
-//		 * @return the lf
-//		 */
-//		protected LandingFacility getLf()
-//		{
-//			return lf;
-//		}
-//
-//		/**
-//		 * @param lf the lf to set
-//		 */
-//		protected void setLf(LandingFacility lf)
-//		{
-//			this.lf = lf;
-//		}
-//
-//		@Override
-//		public String toString()
-//		{
-//			return "foo [distance=" + distance + ", time=" + time + ", orbitNumber=" + orbitNumber + ", sliceNumber="
-//					+ sliceNumber + ", lf=" + lf + "]";
-//		}
-//
-//	}
 }

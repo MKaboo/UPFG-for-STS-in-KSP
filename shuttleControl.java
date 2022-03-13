@@ -7,16 +7,14 @@ import org.javatuples.Triplet;
 import krpc.client.Connection;
 import krpc.client.RPCException;
 import krpc.client.services.MechJeb;
-import krpc.client.services.UI;
 import krpc.client.services.MechJeb.SmartASS;
 import krpc.client.services.MechJeb.SmartASSAutopilotMode;
 import krpc.client.services.MechJeb.SmartASSInterfaceMode;
 import krpc.client.services.SpaceCenter;
 import krpc.client.services.SpaceCenter.Control;
-import krpc.client.services.SpaceCenter.Flight;
 import krpc.client.services.SpaceCenter.ReferenceFrame;
 import krpc.client.services.SpaceCenter.Vessel;
-import krpc.client.services.UI.Canvas;
+import krpc.client.services.UI;
 import krpc.client.services.UI.MessagePosition;
 import shuttleGuidance.reentry.shuttleInfo.EntryConditions;
 

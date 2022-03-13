@@ -41,7 +41,10 @@ public class PathandError
 
 	}
 	
-	
+	private static double parceDistanceFromAllLandingSites() 
+	{
+		return 0;
+	}
 	
 	
 }

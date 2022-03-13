@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import krpc.client.Connection;
 import krpc.client.RPCException;
 import krpc.client.services.MechJeb;
+import krpc.client.services.MechJeb.NodeExecutor;
 import krpc.client.services.MechJeb.SmartASS;
 import krpc.client.services.MechJeb.SmartASSAutopilotMode;
 import krpc.client.services.MechJeb.SmartASSInterfaceMode;
@@ -21,8 +22,11 @@ class Reentry {
 	private Control vControl;
 	private MechJeb mj;
 	private SmartASS smartASS;
+	private shuttleInfo sInfo;
+	
 	
 	public Reentry(Connection connection, SpaceCenter spaceCenter, Vessel shuttle, CelestialBody earth, MechJeb mj) {
+
 		super();
 		this.connection = connection;
 		this.spaceCenter = spaceCenter;
@@ -34,32 +38,29 @@ class Reentry {
 			this.mj = mj;
 			vControl = shuttle.getControl();
 			smartASS = mj.getSmartASS();
+			sInfo = new shuttleInfo(connection, shuttle, earth.getReferenceFrame());
+
+			spaceCenter.setPhysicsWarpFactor(0);
+			spaceCenter.setRailsWarpFactor(0);
 			TimeUnit.SECONDS.sleep(2);
 			
-		} catch (RPCException e)
+		} catch (Exception e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e)
-		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public Reentry() {
-		
-		
-	}
+	
 	public void start()
 	{
 		try
 		{
-			setInitialControl(0, 0, 0);
 			
+			setInitialControl(0, 0, 0);
+			executeDeorbitBurn();
 		} catch (RPCException | InterruptedException e)
 		{
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		
@@ -89,4 +90,12 @@ class Reentry {
 			TimeUnit.MILLISECONDS.sleep(250);
 		}
 	}
+	
+	private void executeDeorbitBurn() throws RPCException
+	{
+		
+		NodeExecutor executor = mj.getNodeExecutor();
+		executor.executeOneNode();
+	}
+	
 }
