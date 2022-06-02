@@ -29,6 +29,7 @@ public class Deorbit {
 	private ReferenceFrame referenceFrame;
 	private CelestialBody host;
 	private Node node;
+	private static final double deorbitBurnToAltitude = 76200;
 	// private static MechJeb mj;
 	// private static SmartASS smartASS;
 
@@ -39,7 +40,7 @@ public class Deorbit {
 			run();
 		} catch (RPCException e)
 		{
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -52,29 +53,30 @@ public class Deorbit {
 	private void run() throws RPCException
 	{
 
-
-		//EntryConditions ecc = sInfo.getEc();
+		// EntryConditions ecc = sInfo.getEc();
 
 		findShortestDistance();
 		setDeorbitNode();
-		//setup re-entry info here
-		Reentry reentryControl = new Reentry(connection,spaceCenter,vessel,host, mj);
+		// setup re-entry info here
+		Reentry reentryControl = new Reentry(connection, spaceCenter, vessel, host, mj);
 		reentryControl.start();
 	}
+
 	private double visViva(double deorbitPeri) throws RPCException
 	{
 		Triplet<Double, Double, Double> tripletNodePosition = node.position(referenceFrame);
-		//Vector3D v3dNodePosition = toV3D(tripletNodePosition);
-		//double circularOrbitAltitudeApproximation = v3dNodePosition.dotProduct(v3dNodePosition);
+		// Vector3D v3dNodePosition = toV3D(tripletNodePosition);
+		// double circularOrbitAltitudeApproximation =
+		// v3dNodePosition.dotProduct(v3dNodePosition);
 		double circularOrbitAltitudeApproximation = host.altitudeAtPosition(tripletNodePosition, referenceFrame);
 		System.out.println("Orbit height at the node is " + circularOrbitAltitudeApproximation);
-		
-		double r = circularOrbitAltitudeApproximation; 
-		double a = (r+deorbitPeri)/2;
-		
+
+		double r = circularOrbitAltitudeApproximation;
+		double a = (r + deorbitPeri) / 2;
+
 		try
 		{
-			double v = FastMath.sqrt(host.getGravitationalParameter() * ((2/r) - (1/a)));
+			double v = FastMath.sqrt(host.getGravitationalParameter() * ((2 / r) - (1 / a)));
 			return v;
 		} catch (RPCException e)
 		{
@@ -82,16 +84,19 @@ public class Deorbit {
 		}
 		return 0;
 	}
-	private void setDeorbitNode() throws RPCException 
+
+	// TODO Fix this check if the sign of the deltaV vector is right
+	private void setDeorbitNode() throws RPCException
 	{
-		double requiredV = visViva(76200);
+		double requiredV = visViva(deorbitBurnToAltitude);
+		System.out.println(requiredV);
 		try
 		{
 			node.setPrograde(-1 * requiredV);
-			
+
 		} catch (RPCException e)
 		{
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -136,7 +141,6 @@ public class Deorbit {
 			clearNodes();
 
 			double now = spaceCenter.getUT();
-			
 
 			node = vessel.getControl().addNode(now, 0, 0, 0);
 
@@ -151,34 +155,38 @@ public class Deorbit {
 					double time = now + (utMargin * section) + (period * orbitCount);
 					node.setUT(time);
 					Vector3D shuttlePosition = toV3D(orbit.positionAt(time, referenceFrame));
+					
+					//TODO check if necessary
 					shuttlePosition = shuttlePosition.normalize();
 
 					for (Entry<String, LandingFacility> landingFacilityEntry : ShuttleLandingSitesConstants
 							.getLandingSites().entrySet())
 					{
+						//TODO check if normalization is necessary
+
 						Vector3D lfPosition = geodeticToECEF(landingFacilityEntry.getValue(),
 								host.getEquatorialRadius()).normalize();
 
 						double theta = FastMath.acos(shuttlePosition.dotProduct(lfPosition));
 						theta = FastMath.abs(theta);
-						
-						//TODO fix the angle in radians
+
+						// TODO fix the angle in radians
 						if (theta > FastMath.PI - FastMath.toRadians(1))
 						{
 							node.setUT(time);
 							System.out.println("Acceptible deorbit point found");
-							System.out.println("Landing site is " + landingFacilityEntry.getKey() );
-							System.out.println("Time to deorbit node: " + (time-now) + " in seconds");
-					
-							
+							System.out.println("Landing site is " + landingFacilityEntry.getKey());
+							System.out.println("Time to deorbit node: " + (time - now) + " in seconds");
+
 							return;
 						}
 					}
-					
+
 				}
-				System.out.println("No deorbit found in #" + orbitCount + " orbit" );
+				System.out.println("No deorbit found in #" + orbitCount + " orbit");
 			}
-			System.err.println("Landing impossible due to no valid deorbit point within " + ShuttleLandingSitesConstants.MaxNumberOfOrbitsToCheck + " orbits");
+			System.err.println("Landing impossible due to no valid deorbit point within "
+					+ ShuttleLandingSitesConstants.MaxNumberOfOrbitsToCheck + " orbits");
 
 		} catch (Exception e)
 		{

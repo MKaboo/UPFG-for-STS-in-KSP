@@ -5,6 +5,15 @@ import java.util.HashMap;
 
 import org.apache.commons.math3.util.FastMath;
 
+import krpc.client.Connection;
+import krpc.client.services.KRPC;
+import krpc.client.services.MechJeb;
+import krpc.client.services.SpaceCenter;
+import krpc.client.services.SpaceCenter.CelestialBody;
+import krpc.client.services.SpaceCenter.Vessel;
+import krpc.client.services.SpaceCenter.Waypoint;
+import krpc.client.services.SpaceCenter.WaypointManager;
+
 class ShuttleLandingSitesConstants {
 
 	private static HashMap<String, LandingFacility> landingSites;
@@ -26,12 +35,35 @@ class ShuttleLandingSitesConstants {
 		//addLocation(KSC15);
 		addLocation(KSC33);
 		//addLocation(EAFB22);
+		
+		
+		try
+		{
+			Connection connection = Connection.newInstance("Init");
+			KRPC.newInstance(connection);
+			SpaceCenter spaceCenter = SpaceCenter.newInstance(connection);
+			WaypointManager wm = spaceCenter.getWaypointManager();
+			Vessel vessel = spaceCenter.getActiveVessel();
+			CelestialBody host = vessel.getOrbit().getBody();
+			
+			for (String string : facilitiesNames)
+			{
+				LandingFacility lf = landingSites.get(string);
+				Waypoint toadd = wm.addWaypointAtAltitude(lf.getLatitude(),lf.getLongitude(),lf.getAltitude(),host,lf.getName());
+			}
+			connection.close();
+		}
+		catch (Exception e) {
+			// TODO: handle exception
+			System.err.println(e.getStackTrace());
+		}
 	}
 	
 	private static void addLocation(LandingFacility lf)
 	{
 		landingSites.put(lf.getName(), lf);
 		facilitiesNames.add(lf.getName());
+
 	}
 	
 	protected static HashMap<String, LandingFacility> getLandingSites()

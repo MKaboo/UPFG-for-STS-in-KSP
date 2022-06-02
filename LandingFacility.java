@@ -1,5 +1,8 @@
 package shuttleGuidance.reentry;
 
+import krpc.client.services.SpaceCenter.Waypoint;
+import krpc.client.services.SpaceCenter.WaypointManager;
+
 final class LandingFacility
 {
 	private final String name;
@@ -56,6 +59,8 @@ final class LandingFacility
 		return "LandingFacilities [name=" + name + ", latitude=" + latitude + ", longitude=" + longitude + ", altitude="
 				+ altitude + ", heading=" + heading + ", runWayLength=" + runWayLength + "]";
 	}
+
+	
 	
 	
 	
